@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OXO – Tic Tac Toe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      
+      --color-x: #38bdf8;
+      --color-x-glow: rgba(56, 189, 248, 0.35);
+      --color-o: #fb7185;
+      --color-o-glow: rgba(251, 113, 133, 0.35);
+      
+      --cell-bg: rgba(15, 23, 42, 0.6);
+      --cell-hover: rgba(51, 65, 85, 0.5);
+      --win-bg: rgba(34, 197, 94, 0.15);
+      --win-border: #4ade80;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 440px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    header {
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      background: linear-gradient(135deg, #38bdf8 0%, #a855f7 50%, #fb7185 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.25rem;
+    }
+
+    .instruction {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    main {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .status-card {
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(12px);
+      border-radius: 1rem;
+      padding: 0.85rem 1.25rem;
+      text-align: center;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .status-text {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      transition: color 0.3s ease;
+    }
+
+    .status-text.x-turn, .status-text.x-win {
+      color: var(--color-x);
+      text-shadow: 0 0 12px var(--color-x-glow);
+    }
+
+    .status-text.o-turn, .status-text.o-win {
+      color: var(--color-o);
+      text-shadow: 0 0 12px var(--color-o-glow);
+    }
+
+    .status-text.draw {
+      color: #f59e0b;
+      text-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+    }
+
+    .scoreboard {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      width: 100%;
+    }
+
+    .score-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(12px);
+      border-radius: 0.85rem;
+      padding: 0.6rem 0.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+    }
+
+    .score-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .score-value {
+      font-size: 1.35rem;
+      font-weight: 800;
+    }
+
+    .score-box.player-x .score-value { color: var(--color-x); }
+    .score-box.ties .score-value { color: #cbd5e1; }
+    .score-box.player-o .score-value { color: var(--color-o); }
+
+    .game-board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 0.75rem;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(16px);
+      border-radius: 1.25rem;
+      padding: 0.85rem;
+      box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.4);
+    }
+
+    .cell {
+      background: var(--cell-bg);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 0.85rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 3.25rem;
+      font-weight: 800;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cell:hover:not(.disabled) {
+      background: var(--cell-hover);
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 6px 15px -3px rgba(0, 0, 0, 0.3);
+    }
+
+    .cell:active:not(.disabled) {
+      transform: translateY(0);
+    }
+
+    .cell.disabled {
+      cursor: default;
+    }
+
+    .cell.x {
+      color: var(--color-x);
+      text-shadow: 0 0 20px var(--color-x-glow);
+    }
+
+    .cell.o {
+      color: var(--color-o);
+      text-shadow: 0 0 20px var(--color-o-glow);
+    }
+
+    .cell.mark-animate {
+      animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    .cell.winning {
+      background: var(--win-bg);
+      border-color: var(--win-border);
+      box-shadow: inset 0 0 15px rgba(74, 222, 128, 0.3), 0 0 20px rgba(74, 222, 128, 0.2);
+      animation: pulseWin 1.2s infinite ease-in-out alternate;
+    }
+
+    @keyframes popIn {
+      0% {
+        transform: scale(0.3);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes pulseWin {
+      0% {
+        transform: scale(1);
+      }
+      100% {
+        transform: scale(1.04);
+      }
+    }
+
+    .restart-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 0.9rem 1.5rem;
+      font-family: inherit;
+      font-size: 1.05rem;
+      font-weight: 700;
+      border-radius: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.6rem;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .restart-btn:hover {
+      background: linear-gradient(135deg, #475569 0%, #334155 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .restart-btn:active {
+      transform: translateY(0);
+    }
+
+    .restart-btn svg {
+      transition: transform 0.4s ease;
+    }
+
+    .restart-btn:hover svg {
+      transform: rotate(-180deg);
+    }
+
+    @media (max-width: 380px) {
+      h1 {
+        font-size: 1.85rem;
+      }
+      .cell {
+        font-size: 2.5rem;
+      }
+      .status-text {
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <h1>OXO – Tic Tac Toe</h1>
+      <p class="instruction">Tap a cell to place your mark.</p>
+    </header>
+
+    <main>
+      <div class="status-card">
+        <span class="status-text x-turn" id="statusText">X's turn</span>
+      </div>
+
+      <div class="scoreboard">
+        <div class="score-box player-x">
+          <span class="score-label">Player X</span>
+          <span class="score-value" id="scoreX">0</span>
+        </div>
+        <div class="score-box ties">
+          <span class="score-label">Draws</span>
+          <span class="score-value" id="scoreTies">0</span>
+        </div>
+        <div class="score-box player-o">
+          <span class="score-label">Player O</span>
+          <span class="score-value" id="scoreO">0</span>
+        </div>
+      </div>
+
+      <div class="game-board" id="board" role="grid" aria-label="Tic Tac Toe Board">
+        <button class="cell" data-index="0" aria-label="Cell 1"></button>
+        <button class="cell" data-index="1" aria-label="Cell 2"></button>
+        <button class="cell" data-index="2" aria-label="Cell 3"></button>
+        <button class="cell" data-index="3" aria-label="Cell 4"></button>
+        <button class="cell" data-index="4" aria-label="Cell 5"></button>
+        <button class="cell" data-index="5" aria-label="Cell 6"></button>
+        <button class="cell" data-index="6" aria-label="Cell 7"></button>
+        <button class="cell" data-index="7" aria-label="Cell 8"></button>
+        <button class="cell" data-index="8" aria-label="Cell 9"></button>
+      </div>
+
+      <button class="restart-btn" id="restartBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+        </svg>
+        Restart Game
+      </button>
+    </main>
+  </div>
+
+  <script>
+    const WINNING_COMBINATIONS = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6]
+    ];
+
+    let boardState = Array(9).fill('');
+    let currentPlayer = 'X';
+    let gameActive = true;
+    
+    const scores = {
+      X: 0,
+      O: 0,
+      ties: 0
+    };
+
+    const statusText = document.getElementById('statusText');
+    const cells = document.querySelectorAll('.cell');
+    const restartBtn = document.getElementById('restartBtn');
+    const scoreX = document.getElementById('scoreX');
+    const scoreO = document.getElementById('scoreO');
+    const scoreTies = document.getElementById('scoreTies');
+
+    function handleCellClick(e) {
+      const cell = e.target;
+      const index = parseInt(cell.getAttribute('data-index'));
+
+      if (boardState[index] !== '' || !gameActive) {
+        return;
+      }
+
+      makeMove(index, cell);
+    }
+
+    function makeMove(index, cell) {
+      boardState[index] = currentPlayer;
+      cell.textContent = currentPlayer;
+      cell.classList.add(currentPlayer.toLowerCase(), 'disabled', 'mark-animate');
+
+      const winCombo = checkWin();
+
+      if (winCombo) {
+        gameActive = false;
+        highlightWin(winCombo);
+        updateStatus(`${currentPlayer} wins!`, `${currentPlayer.toLowerCase()}-win`);
+        scores[currentPlayer]++;
+        updateScoreboard();
+      } else if (checkDraw()) {
+        gameActive = false;
+        updateStatus('Draw!', 'draw');
+        scores.ties++;
+        updateScoreboard();
+      } else {
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        updateStatus(`${currentPlayer}'s turn`, `${currentPlayer.toLowerCase()}-turn`);
+      }
+    }
+
+    function checkWin() {
+      for (const combo of WINNING_COMBINATIONS) {
+        const [a, b, c] = combo;
+        if (
+          boardState[a] !== '' &&
+          boardState[a] === boardState[b] &&
+          boardState[a] === boardState[c]
+        ) {
+          return combo;
+        }
+      }
+      return null;
+    }
+
+    function checkDraw() {
+      return boardState.every(cell => cell !== '');
+    }
+
+    function highlightWin(combo) {
+      combo.forEach(index => {
+        cells[index].classList.add('winning');
+      });
+    }
+
+    function updateStatus(message, className) {
+      statusText.textContent = message;
+      statusText.className = 'status-text ' + className;
+    }
+
+    function updateScoreboard() {
+      scoreX.textContent = scores.X;
+      scoreO.textContent = scores.O;
+      scoreTies.textContent = scores.ties;
+    }
+
+    function restartGame() {
+      boardState = Array(9).fill('');
+      currentPlayer = 'X';
+      gameActive = true;
+
+      statusText.textContent = "X's turn";
+      statusText.className = 'status-text x-turn';
+
+      cells.forEach(cell => {
+        cell.textContent = '';
+        cell.className = 'cell';
+      });
+    }
+
+    cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+    restartBtn.addEventListener('click', restartGame);
+  </script>
+</body>
+</html>
